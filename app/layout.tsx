@@ -6,6 +6,7 @@ import "./globals.css";
 import "@/styles/space.css";
 import "@/styles/ui.css";
 import "@/styles/readability.css";
+import "@/styles/pairing.css";
 
 const calmSans = Nunito_Sans({
   subsets: ["latin"],
@@ -38,9 +39,7 @@ export const metadata: Metadata = {
     "Space Bubble",
   ],
   category: "lifestyle",
-  alternates: {
-    canonical: "/",
-  },
+  alternates: { canonical: "/" },
   manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
@@ -49,14 +48,12 @@ export const metadata: Metadata = {
     siteName,
     title: siteTitle,
     description: siteDescription,
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "Space Bubble — a quiet shared space for calmer conversations",
-      },
-    ],
+    images: [{
+      url: "/opengraph-image",
+      width: 1200,
+      height: 630,
+      alt: "Space Bubble — a quiet shared space for calmer conversations",
+    }],
   },
   twitter: {
     card: "summary_large_image",
@@ -69,11 +66,7 @@ export const metadata: Metadata = {
     title: siteName,
     statusBarStyle: "black-translucent",
   },
-  formatDetection: {
-    telephone: false,
-    email: false,
-    address: false,
-  },
+  formatDetection: { telephone: false, email: false, address: false },
   robots: {
     index: true,
     follow: true,
