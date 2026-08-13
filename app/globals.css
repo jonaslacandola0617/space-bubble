@@ -1,0 +1,38 @@
+:root {
+  --bg: #070711;
+  --ink: #f8f7ff;
+  --muted: rgba(238, 235, 255, 0.62);
+  --line: rgba(255, 255, 255, 0.09);
+  --panel: rgba(14, 13, 31, 0.82);
+  --violet: #b5a8ff;
+  --blue: #91c9ff;
+  --rose: #efb4ce;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); }
+body {
+  font-family: "Avenir Next", "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button, textarea { font: inherit; }
+button { color: inherit; }
+button:focus-visible, textarea:focus-visible { outline: 2px solid rgba(188, 176, 255, .72); outline-offset: 3px; }
+
+.eyebrow {
+  margin: 0 0 11px;
+  font-size: 10px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: rgba(205, 198, 255, .5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
