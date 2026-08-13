@@ -16,6 +16,7 @@ export type BubbleRow = {
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
+  popped_at: string | null;
 };
 
 export type CheckinRow = {
@@ -120,7 +121,12 @@ export async function ensureSpaceSession(): Promise<SpaceSession> {
 export async function loadSpaceState(spaceId: string) {
   const supabase = requireClient();
   const [bubbleResult, checkinResult] = await Promise.all([
-    supabase.from("bubbles").select("*").eq("space_id", spaceId).order("created_at", { ascending: true }),
+    supabase
+      .from("bubbles")
+      .select("*")
+      .eq("space_id", spaceId)
+      .is("popped_at", null)
+      .order("created_at", { ascending: true }),
     supabase.from("checkins").select("*").eq("space_id", spaceId).order("updated_at", { ascending: false }),
   ]);
 
@@ -183,9 +189,15 @@ export async function updateBubbleStatus(spaceId: string, bubbleId: string, stat
   return data as BubbleRow;
 }
 
-export async function deleteBubble(spaceId: string, bubbleId: string) {
+export async function popBubble(spaceId: string, bubbleId: string) {
   const supabase = requireClient();
-  const { error } = await supabase.from("bubbles").delete().eq("space_id", spaceId).eq("id", bubbleId);
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("bubbles")
+    .update({ popped_at: now, resolved_at: now, updated_at: now })
+    .eq("space_id", spaceId)
+    .eq("id", bubbleId);
+
   if (error) throw error;
 }
 
