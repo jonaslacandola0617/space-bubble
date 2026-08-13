@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "@/styles/space.css";
 import "@/styles/ui.css";
+import "@/styles/readability.css";
 
 export const metadata: Metadata = {
   title: "Space Bubble",
