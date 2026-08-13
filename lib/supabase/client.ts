@@ -18,3 +18,18 @@ export function getSupabaseBrowserClient() {
 
   return browserClient;
 }
+
+export function subscribeToSpace(spaceId: string, onChange: () => void) {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return () => {};
+
+  const channel = supabase
+    .channel("space-updates")
+    .on("postgres_changes", { event: "*", schema: "public", table: "bubbles", filter: "space_id=eq." + spaceId }, onChange)
+    .on("postgres_changes", { event: "*", schema: "public", table: "checkins", filter: "space_id=eq." + spaceId }, onChange)
+    .subscribe();
+
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}
