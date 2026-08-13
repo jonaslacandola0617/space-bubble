@@ -21,11 +21,15 @@ button, textarea { font: inherit; }
 button { color: inherit; }
 button:focus-visible, textarea:focus-visible { outline: 2px solid rgba(188, 176, 255, .72); outline-offset: 3px; }
 
+.brand-copy strong {
+  text-transform: capitalize;
+}
+
 .stage-intro h1,
 .panel-copy h2,
 .modal-heading h2 {
-  font-family: var(--font-warm-display), Georgia, "Times New Roman", serif;
-  font-weight: 520;
+  font-family: var(--font-calm-display), var(--font-calm-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 560;
   letter-spacing: -.035em;
 }
 
