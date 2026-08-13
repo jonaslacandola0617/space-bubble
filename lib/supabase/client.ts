@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 let browserClient: SupabaseClient | null = null;
+let spaceSessionPromise: Promise<SpaceSession> | null = null;
 
 export type BubbleRow = {
   id: string;
@@ -62,7 +63,7 @@ function requireClient() {
   return supabase;
 }
 
-export async function ensureSpaceSession(): Promise<SpaceSession> {
+async function createSpaceSession(): Promise<SpaceSession> {
   const supabase = requireClient();
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw sessionError;
@@ -116,6 +117,17 @@ export async function ensureSpaceSession(): Promise<SpaceSession> {
     displayName,
     inviteCode: (space?.invite_code as string | null | undefined) ?? null,
   };
+}
+
+export function ensureSpaceSession(): Promise<SpaceSession> {
+  if (!spaceSessionPromise) {
+    spaceSessionPromise = createSpaceSession().catch((error) => {
+      spaceSessionPromise = null;
+      throw error;
+    });
+  }
+
+  return spaceSessionPromise;
 }
 
 export async function loadSpaceState(spaceId: string) {
