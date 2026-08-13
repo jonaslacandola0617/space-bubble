@@ -1,4 +1,14 @@
+"use client";
+
+import { useState } from "react";
+
 export function SpaceBubbleApp() {
+  const [energy, setEnergy] = useState(2);
+
+  function cycleEnergy() {
+    setEnergy((current) => (current >= 5 ? 1 : current + 1));
+  }
+
   return (
     <main className="space-shell">
       <div className="cosmos" aria-hidden="true">
@@ -9,8 +19,8 @@ export function SpaceBubbleApp() {
 
       <header className="topbar">
         <div className="brand"><span className="brand-orbit"><span /></span><span className="brand-copy"><strong>space bubble</strong><small>our quiet place</small></span></div>
-        <div className="together-status"><div className="person"><span className="avatar">J</span><span className="person-copy"><small>you</small><strong>energy 2/5</strong></span></div><span className="connection-line"><i /></span><div className="person"><span className="avatar avatar-partner">P</span><span className="person-copy"><small>partner</small><strong>energy 3/5</strong></span></div></div>
-        <button className="quiet-button" type="button">Check in</button>
+        <div className="together-status"><div className="person"><span className="avatar">J</span><span className="person-copy"><small>you</small><strong>energy {energy}/5</strong></span></div><span className="connection-line"><i /></span><div className="person"><span className="avatar avatar-partner">P</span><span className="person-copy"><small>partner</small><strong>energy 3/5</strong></span></div></div>
+        <button className="quiet-button" type="button" onClick={cycleEnergy}>Check in</button>
       </header>
 
       <section className="space-stage">
@@ -23,7 +33,7 @@ export function SpaceBubbleApp() {
         </div>
       </section>
 
-      <nav className="dock"><button className="dock-button" type="button"><span className="dock-symbol">≈</span><span>Check in</span></button><button className="new-bubble-button" type="button"><span>+</span>New bubble</button><div className="dock-status"><span className="pulse-dot" /><span>just us</span></div></nav>
+      <nav className="dock"><button className="dock-button" type="button" onClick={cycleEnergy}><span className="dock-symbol">≈</span><span>Check in</span></button><button className="new-bubble-button" type="button"><span>+</span>New bubble</button><div className="dock-status"><span className="pulse-dot" /><span>just us</span></div></nav>
     </main>
   );
 }
