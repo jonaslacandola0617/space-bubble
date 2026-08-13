@@ -2,7 +2,7 @@ export type BubbleStatus = "processing" | "shared" | "heard" | "talking" | "sett
 export type BubbleNeed = "listen" | "comfort" | "space" | "solution" | "later";
 
 export type Bubble = {
-  id: number;
+  id: string;
   author: "you" | "partner";
   text: string;
   status: BubbleStatus;
@@ -29,10 +29,3 @@ export const statusLabels: Record<BubbleStatus, string> = {
   talking: "Talking",
   settled: "Ready to pop",
 };
-
-export const seedBubbles: Bubble[] = [
-  { id: 1, author: "partner", text: "I want to make a little time for us this week.", status: "heard", need: "listen", x: 18, y: 31, size: "lg", tone: "rose", time: "12 min ago" },
-  { id: 2, author: "you", text: "I'm still sorting through a thought and want to revisit it later.", status: "processing", need: "later", x: 62, y: 22, size: "md", tone: "blue", time: "38 min ago" },
-  { id: 3, author: "partner", text: "Can we plan a quiet moment together this weekend?", status: "shared", need: "solution", x: 73, y: 61, size: "lg", tone: "violet", time: "Yesterday" },
-  { id: 4, author: "you", text: "Thank you for everything you handled today.", status: "settled", need: "comfort", x: 37, y: 70, size: "sm", tone: "pearl", time: "Yesterday" },
-];
