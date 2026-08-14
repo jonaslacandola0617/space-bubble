@@ -18,7 +18,12 @@ function usernameToEmail(username: string) {
 }
 
 function displayMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong while signing in.";
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return "Something went wrong while signing in.";
 }
 
 function accountName(user: User | null) {
@@ -38,13 +43,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
+    const browserClient = getSupabaseBrowserClient();
+    if (!browserClient) {
       setError("Supabase is not configured.");
       setGateState("signed-out");
       return;
     }
 
+    const supabase = browserClient;
     let active = true;
 
     async function inspectSession() {
