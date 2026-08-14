@@ -14,13 +14,30 @@ type ErrorLike = {
 
 function messageFrom(error: unknown) {
   if (error instanceof Error) return error.message;
+
   if (error && typeof error === "object") {
     const candidate = error as ErrorLike;
+    const rawMessage = candidate.message?.trim();
+
+    if (rawMessage === "This Space Bubble already has two people") {
+      return "This Space Bubble is already paired. If this is your own second device, do not use the partner invite—sign in with your existing username and password instead.";
+    }
+
+    if (rawMessage === "Invalid invite code") {
+      return "That invite code is not valid. Ask your partner to copy the current code again and paste it here.";
+    }
+
+    if (rawMessage === "Authentication required") {
+      return "Your sign-in session expired. Sign in again with your username and password, then retry pairing.";
+    }
+
     const parts = [candidate.message, candidate.details, candidate.hint]
       .filter((part): part is string => Boolean(part?.trim()));
+
     if (parts.length) return parts.join(" · ");
     if (candidate.code) return `Pairing failed (${candidate.code}).`;
   }
+
   return "Something went wrong while pairing your space.";
 }
 
@@ -94,9 +111,8 @@ export function PartnerPairing() {
       if (joinError) throw joinError;
       window.location.reload();
     } catch (nextError) {
-      const readable = messageFrom(nextError);
       console.error("Space Bubble partner pairing failed", nextError);
-      setError(readable);
+      setError(messageFrom(nextError));
       setBusy(false);
     }
   }
