@@ -14,7 +14,6 @@ export function PartnerPairing() {
   const [memberCount, setMemberCount] = useState(0);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<PartnerMode>("invite");
-  const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +64,7 @@ export function PartnerPairing() {
   }
 
   async function joinPartner() {
-    if (!code.trim() || !name.trim() || busy) return;
+    if (!code.trim() || !session || busy) return;
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
 
@@ -74,7 +73,7 @@ export function PartnerPairing() {
       setError(null);
       const { error: joinError } = await supabase.rpc("join_shared_space", {
         code: code.trim().toLowerCase(),
-        member_name: name.trim(),
+        member_name: session.displayName,
       });
 
       if (joinError) throw joinError;
@@ -113,23 +112,21 @@ export function PartnerPairing() {
 
             {mode === "invite" ? (
               <>
-                <p className="pairing-copy">Send this private code to your partner. It fills the one remaining spot in your Space Bubble.</p>
+                <p className="pairing-copy">Send this private code to your partner. When they enter it, both accounts will share the same Space Bubble.</p>
                 <button className="invite-code" type="button" onClick={copyInvite}>
                   <span>{session.inviteCode?.toUpperCase()}</span>
                   <small>{copied ? "Copied" : "Tap to copy"}</small>
                 </button>
-                <p className="pairing-footnote">Once your partner joins, this space is full. A third person or device cannot join with this code.</p>
+                <p className="pairing-footnote">Once your partner joins, this space is full. Your own extra devices simply sign in with your username and password.</p>
               </>
             ) : (
               <>
-                <p className="pairing-copy">If your partner created the space first, enter their invite code here. This device will move into that shared Space Bubble.</p>
+                <p className="pairing-copy">Paste the invite code your partner sent you. You are joining as <strong>@{session.displayName}</strong>.</p>
                 <label className="field-label" htmlFor="partner-code">Partner invite code</label>
                 <input className="pairing-input code-input" id="partner-code" autoFocus value={code} onChange={(event) => setCode(event.target.value)} placeholder="Paste invite code" autoCapitalize="characters" />
-                <label className="field-label pairing-name-label" htmlFor="partner-name">Your name</label>
-                <input className="pairing-input" id="partner-name" maxLength={40} value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" />
                 {error ? <p className="pairing-error">{error}</p> : null}
                 <div className="pairing-actions">
-                  <button className="primary-action full-width" type="button" onClick={joinPartner} disabled={!code.trim() || !name.trim() || busy}>{busy ? "Joining…" : "Join our space"}</button>
+                  <button className="primary-action full-width" type="button" onClick={joinPartner} disabled={!code.trim() || busy}>{busy ? "Connecting…" : "Connect with partner"}</button>
                 </div>
               </>
             )}
