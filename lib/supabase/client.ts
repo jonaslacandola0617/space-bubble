@@ -68,17 +68,15 @@ async function createSpaceSession(): Promise<SpaceSession> {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw sessionError;
 
-  let user = sessionData.session?.user ?? null;
-
-  if (!user) {
-    const { data, error } = await supabase.auth.signInAnonymously();
-    if (error) {
-      throw new Error(`Could not create a private device session. Enable Anonymous Sign-Ins in Supabase Auth. ${error.message}`);
-    }
-    user = data.user;
+  const user = sessionData.session?.user ?? null;
+  if (!user || user.is_anonymous) {
+    throw new Error("Sign in with your Space Bubble username and password first.");
   }
 
-  if (!user) throw new Error("Supabase did not return an authenticated user.");
+  const metadataUsername = user.user_metadata?.username;
+  const username = typeof metadataUsername === "string" && metadataUsername
+    ? metadataUsername
+    : user.email?.split("@")[0] ?? "You";
 
   const { data: membership, error: membershipError } = await supabase
     .from("space_members")
@@ -90,17 +88,17 @@ async function createSpaceSession(): Promise<SpaceSession> {
   if (membershipError) throw membershipError;
 
   let spaceId = membership?.space_id as string | undefined;
-  let displayName = (membership?.display_name as string | undefined) ?? "You";
+  let displayName = (membership?.display_name as string | undefined) ?? username;
 
   if (!spaceId) {
     const { data, error } = await supabase.rpc("create_shared_space", {
       space_name: "Our Space",
-      member_name: "You",
+      member_name: username,
     });
     if (error) throw error;
     if (!data) throw new Error("Could not create your shared space.");
     spaceId = data as string;
-    displayName = "You";
+    displayName = username;
   }
 
   const { data: space, error: spaceError } = await supabase
