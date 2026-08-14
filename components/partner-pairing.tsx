@@ -5,8 +5,23 @@ import { ensureSpaceSession, getSupabaseBrowserClient, type SpaceSession } from 
 
 type PartnerMode = "invite" | "join";
 
+type ErrorLike = {
+  message?: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+};
+
 function messageFrom(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong while pairing your space.";
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object") {
+    const candidate = error as ErrorLike;
+    const parts = [candidate.message, candidate.details, candidate.hint]
+      .filter((part): part is string => Boolean(part?.trim()));
+    if (parts.length) return parts.join(" · ");
+    if (candidate.code) return `Pairing failed (${candidate.code}).`;
+  }
+  return "Something went wrong while pairing your space.";
 }
 
 export function PartnerPairing() {
@@ -79,7 +94,9 @@ export function PartnerPairing() {
       if (joinError) throw joinError;
       window.location.reload();
     } catch (nextError) {
-      setError(messageFrom(nextError));
+      const readable = messageFrom(nextError);
+      console.error("Space Bubble partner pairing failed", nextError);
+      setError(readable);
       setBusy(false);
     }
   }
@@ -124,7 +141,7 @@ export function PartnerPairing() {
                 <p className="pairing-copy">Paste the invite code your partner sent you. You are joining as <strong>@{session.displayName}</strong>.</p>
                 <label className="field-label" htmlFor="partner-code">Partner invite code</label>
                 <input className="pairing-input code-input" id="partner-code" autoFocus value={code} onChange={(event) => setCode(event.target.value)} placeholder="Paste invite code" autoCapitalize="characters" />
-                {error ? <p className="pairing-error">{error}</p> : null}
+                {error ? <p className="pairing-error" role="alert">{error}</p> : null}
                 <div className="pairing-actions">
                   <button className="primary-action full-width" type="button" onClick={joinPartner} disabled={!code.trim() || busy}>{busy ? "Connecting…" : "Connect with partner"}</button>
                 </div>
