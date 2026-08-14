@@ -58,7 +58,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       }
 
       if (data.session?.user?.is_anonymous) {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: "local" });
         if (!active) return;
         setUser(null);
         setGateState("signed-out");
@@ -150,7 +150,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     const supabase = getSupabaseBrowserClient();
     if (!supabase || busy) return;
     setBusy(true);
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
     window.location.reload();
   }
 
