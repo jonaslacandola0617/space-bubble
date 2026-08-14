@@ -179,6 +179,25 @@ export function AuthGate({ children }: { children: ReactNode }) {
     setShowConfirmPassword(false);
   }
 
+  const passwordControlStyle = { position: "relative" as const };
+  const passwordInputStyle = { paddingRight: 68 };
+  const passwordToggleStyle = {
+    position: "absolute" as const,
+    right: 9,
+    top: "50%",
+    transform: "translateY(-50%)",
+    minHeight: 30,
+    padding: "0 9px",
+    border: 0,
+    borderRadius: 9,
+    background: "rgba(255,255,255,.035)",
+    color: "rgba(244,242,255,.62)",
+    cursor: "pointer",
+    font: "inherit",
+    fontSize: 11,
+    fontWeight: 700,
+  };
+
   if (gateState === "checking") {
     return (
       <main className="identity-shell">
@@ -212,9 +231,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
             <input className="pairing-input" id="account-username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="e.g. jonas" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={24} />
 
             <label className="field-label auth-field-gap" htmlFor="account-password">Password</label>
-            <div className="password-control">
-              <input className="pairing-input password-input" id="account-password" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 6 characters" autoComplete={mode === "signup" ? "new-password" : "current-password"} />
-              <button className="password-toggle" type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>
+            <div className="password-control" style={passwordControlStyle}>
+              <input className="pairing-input password-input" style={passwordInputStyle} id="account-password" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 6 characters" autoComplete={mode === "signup" ? "new-password" : "current-password"} />
+              <button className="password-toggle" style={passwordToggleStyle} type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
@@ -222,9 +241,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
             {mode === "signup" ? (
               <>
                 <label className="field-label auth-field-gap" htmlFor="account-password-confirm">Confirm password</label>
-                <div className="password-control">
-                  <input className="pairing-input password-input" id="account-password-confirm" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Type it again" autoComplete="new-password" />
-                  <button className="password-toggle" type="button" onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"} aria-pressed={showConfirmPassword}>
+                <div className="password-control" style={passwordControlStyle}>
+                  <input className="pairing-input password-input" style={passwordInputStyle} id="account-password-confirm" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Type it again" autoComplete="new-password" />
+                  <button className="password-toggle" style={passwordToggleStyle} type="button" onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"} aria-pressed={showConfirmPassword}>
                     {showConfirmPassword ? "Hide" : "Show"}
                   </button>
                 </div>
