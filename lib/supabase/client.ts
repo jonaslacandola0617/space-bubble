@@ -31,6 +31,14 @@ export type CheckinRow = {
   updated_at: string;
 };
 
+export type MemberRow = {
+  id: string;
+  space_id: string;
+  user_id: string;
+  display_name: string;
+  joined_at: string;
+};
+
 export type SpaceSession = {
   userId: string;
   spaceId: string;
@@ -130,7 +138,7 @@ export function ensureSpaceSession(): Promise<SpaceSession> {
 
 export async function loadSpaceState(spaceId: string) {
   const supabase = requireClient();
-  const [bubbleResult, checkinResult] = await Promise.all([
+  const [bubbleResult, checkinResult, memberResult] = await Promise.all([
     supabase
       .from("bubbles")
       .select("*")
@@ -138,14 +146,17 @@ export async function loadSpaceState(spaceId: string) {
       .is("popped_at", null)
       .order("created_at", { ascending: true }),
     supabase.from("checkins").select("*").eq("space_id", spaceId).order("updated_at", { ascending: false }),
+    supabase.from("space_members").select("*").eq("space_id", spaceId).order("joined_at", { ascending: true }),
   ]);
 
   if (bubbleResult.error) throw bubbleResult.error;
   if (checkinResult.error) throw checkinResult.error;
+  if (memberResult.error) throw memberResult.error;
 
   return {
     bubbles: (bubbleResult.data ?? []) as BubbleRow[],
     checkins: (checkinResult.data ?? []) as CheckinRow[],
+    members: (memberResult.data ?? []) as MemberRow[],
   };
 }
 
@@ -245,6 +256,7 @@ export function subscribeToSpace(spaceId: string, onChange: () => void) {
     .channel(`space-updates-${spaceId}`)
     .on("postgres_changes", { event: "*", schema: "public", table: "bubbles", filter: "space_id=eq." + spaceId }, onChange)
     .on("postgres_changes", { event: "*", schema: "public", table: "checkins", filter: "space_id=eq." + spaceId }, onChange)
+    .on("postgres_changes", { event: "*", schema: "public", table: "space_members", filter: "space_id=eq." + spaceId }, onChange)
     .subscribe();
 
   return () => {
