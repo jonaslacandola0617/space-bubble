@@ -7,6 +7,7 @@ import "@/styles/space.css";
 import "@/styles/ui.css";
 import "@/styles/readability.css";
 import "@/styles/pairing.css";
+import "@/styles/identity.css";
 
 const calmSans = Nunito_Sans({
   subsets: ["latin"],
