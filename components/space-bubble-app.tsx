@@ -67,6 +67,11 @@ function toBubble(row: BubbleRow, userId: string): Bubble {
   };
 }
 
+function initialFor(name: string, fallback: string) {
+  const first = name.trim().charAt(0);
+  return first ? first.toUpperCase() : fallback;
+}
+
 function messageFrom(error: unknown) {
   return error instanceof Error ? error.message : "Something went wrong while syncing our space.";
 }
@@ -75,6 +80,8 @@ export function SpaceBubbleApp() {
   const [energy, setEnergy] = useState(2);
   const [draftEnergy, setDraftEnergy] = useState(2);
   const [partnerEnergy, setPartnerEnergy] = useState<number | null>(null);
+  const [displayName, setDisplayName] = useState("you");
+  const [partnerName, setPartnerName] = useState("partner");
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
@@ -89,6 +96,8 @@ export function SpaceBubbleApp() {
   const [busy, setBusy] = useState(false);
 
   const selectedBubble = bubbles.find((bubble) => bubble.id === selectedId) ?? null;
+  const myInitial = initialFor(displayName, "Y");
+  const partnerInitial = initialFor(partnerName, "P");
 
   useEffect(() => {
     let disposed = false;
@@ -102,6 +111,7 @@ export function SpaceBubbleApp() {
 
         setSpaceId(session.spaceId);
         setUserId(session.userId);
+        setDisplayName(session.displayName);
 
         const refresh = async () => {
           const state = await loadSpaceState(session.spaceId);
@@ -111,6 +121,11 @@ export function SpaceBubbleApp() {
 
           const mine = state.checkins.find((row: CheckinRow) => row.user_id === session.userId);
           const partner = state.checkins.find((row: CheckinRow) => row.user_id !== session.userId);
+          const mineMember = state.members.find((row) => row.user_id === session.userId);
+          const partnerMember = state.members.find((row) => row.user_id !== session.userId);
+
+          setDisplayName(mineMember?.display_name ?? session.displayName);
+          setPartnerName(partnerMember?.display_name ?? "partner");
 
           if (mine) {
             setEnergy(mine.energy);
@@ -273,8 +288,8 @@ export function SpaceBubbleApp() {
       </div>
 
       <header className="topbar">
-        <div className="brand"><span className="brand-orbit"><span /></span><span className="brand-copy"><strong>space bubble</strong><small>our quiet place</small></span></div>
-        <div className="together-status"><div className="person"><span className="avatar">J</span><span className="person-copy"><small>you</small><strong>energy {energy}/5</strong></span></div><span className="connection-line"><i /></span><div className="person"><span className="avatar avatar-partner">P</span><span className="person-copy"><small>partner</small><strong>energy {partnerEnergy ?? "—"}/5</strong></span></div></div>
+        <div className="brand"><span className="brand-orbit"><span /></span><span className="brand-copy"><strong>Space Bubble</strong><small>our quiet place</small></span></div>
+        <div className="together-status"><div className="person"><span className="avatar">{myInitial}</span><span className="person-copy"><small>@{displayName}</small><strong>energy {energy}/5</strong></span></div><span className="connection-line"><i /></span><div className="person"><span className="avatar avatar-partner">{partnerInitial}</span><span className="person-copy"><small>{partnerName === "partner" ? "partner" : `@${partnerName}`}</small><strong>energy {partnerEnergy ?? "—"}/5</strong></span></div></div>
         <button className="quiet-button" type="button" onClick={openCheckin}>Check in</button>
       </header>
 
@@ -293,7 +308,7 @@ export function SpaceBubbleApp() {
               aria-label={`Open bubble: ${bubble.text}`}
             >
               <span className="bubble-glint" />
-              <span className="bubble-author">{bubble.author === "you" ? "J" : "P"}</span>
+              <span className="bubble-author">{bubble.author === "you" ? myInitial : partnerInitial}</span>
               <span className="bubble-title">{bubble.text}</span>
               <span className="bubble-meta">{statusLabels[bubble.status]}</span>
             </button>
@@ -304,7 +319,7 @@ export function SpaceBubbleApp() {
       {selectedBubble ? (
         <aside className="bubble-panel" aria-label="Bubble details">
           <div className="panel-topline">
-            <div className="panel-author"><span className={`avatar${selectedBubble.author === "partner" ? " avatar-partner" : ""}`}>{selectedBubble.author === "you" ? "J" : "P"}</span><span><small>{selectedBubble.author === "you" ? "you" : "partner"}</small><strong>{selectedBubble.time}</strong></span></div>
+            <div className="panel-author"><span className={`avatar${selectedBubble.author === "partner" ? " avatar-partner" : ""}`}>{selectedBubble.author === "you" ? myInitial : partnerInitial}</span><span><small>{selectedBubble.author === "you" ? `you · @${displayName}` : partnerName === "partner" ? "partner" : `@${partnerName}`}</small><strong>{selectedBubble.time}</strong></span></div>
             <button className="icon-button" type="button" onClick={() => setSelectedId(null)} aria-label="Close bubble">×</button>
           </div>
           <div className="panel-status-row"><span className="status-pill">{statusLabels[selectedBubble.status]}</span><span className="need-pill">{needLabels[selectedBubble.need]}</span></div>
