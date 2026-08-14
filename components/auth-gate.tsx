@@ -6,23 +6,33 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type GateState = "checking" | "signed-out" | "ready";
 type AuthMode = "signup" | "signin";
+type AuthErrorLike = { message?: string; code?: string };
 
 const usernamePattern = /^[a-z0-9_]{3,24}$/;
+const internalAuthDomain = "spacebubble.example.com";
 
 function normalizeUsername(value: string) {
   return value.trim().toLowerCase();
 }
 
 function usernameToEmail(username: string) {
-  return `${normalizeUsername(username)}@spacebubble.local`;
+  return `${normalizeUsername(username)}@${internalAuthDomain}`;
 }
 
 function displayMessage(error: unknown) {
   if (error instanceof Error) return error.message;
-  if (error && typeof error === "object" && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string" && message.trim()) return message;
+
+  if (error && typeof error === "object") {
+    const candidate = error as AuthErrorLike;
+    const message = candidate.message?.trim();
+
+    if (candidate.code === "email_address_invalid" || message?.includes("Email address")) {
+      return "Space Bubble could not create that account because its internal username mapping was rejected. Please refresh and try again.";
+    }
+
+    if (message) return message;
   }
+
   return "Something went wrong while signing in.";
 }
 
@@ -39,6 +49,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,7 +132,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       if (signUpError) throw signUpError;
       if (data.user?.identities?.length === 0) throw new Error("That username is already taken.");
       if (!data.session) {
-        throw new Error("Account created, but email confirmation is still enabled in Supabase. Turn off Confirm email in Authentication → Providers → Email, then sign in here.");
+        throw new Error("Account created, but Confirm email is still enabled in Supabase. Turn it off in Authentication → Providers → Email, then use Sign in with this username and password.");
       }
 
       window.location.reload();
@@ -160,6 +172,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
     window.location.reload();
   }
 
+  function switchMode(nextMode: AuthMode) {
+    setMode(nextMode);
+    setError(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  }
+
   if (gateState === "checking") {
     return (
       <main className="identity-shell">
@@ -184,8 +203,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
           </p>
 
           <div className="pairing-tabs auth-tabs" role="tablist" aria-label="Account access">
-            <button className={mode === "signup" ? "is-active" : ""} type="button" onClick={() => { setMode("signup"); setError(null); }}>Create account</button>
-            <button className={mode === "signin" ? "is-active" : ""} type="button" onClick={() => { setMode("signin"); setError(null); }}>Sign in</button>
+            <button className={mode === "signup" ? "is-active" : ""} type="button" onClick={() => switchMode("signup")}>Create account</button>
+            <button className={mode === "signin" ? "is-active" : ""} type="button" onClick={() => switchMode("signin")}>Sign in</button>
           </div>
 
           <form onSubmit={(event) => { event.preventDefault(); void (mode === "signup" ? createAccount() : signIn()); }}>
@@ -193,16 +212,26 @@ export function AuthGate({ children }: { children: ReactNode }) {
             <input className="pairing-input" id="account-username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="e.g. jonas" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={24} />
 
             <label className="field-label auth-field-gap" htmlFor="account-password">Password</label>
-            <input className="pairing-input" id="account-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 6 characters" autoComplete={mode === "signup" ? "new-password" : "current-password"} />
+            <div className="password-control">
+              <input className="pairing-input password-input" id="account-password" type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 6 characters" autoComplete={mode === "signup" ? "new-password" : "current-password"} />
+              <button className="password-toggle" type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword}>
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
 
             {mode === "signup" ? (
               <>
                 <label className="field-label auth-field-gap" htmlFor="account-password-confirm">Confirm password</label>
-                <input className="pairing-input" id="account-password-confirm" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Type it again" autoComplete="new-password" />
+                <div className="password-control">
+                  <input className="pairing-input password-input" id="account-password-confirm" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="Type it again" autoComplete="new-password" />
+                  <button className="password-toggle" type="button" onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"} aria-pressed={showConfirmPassword}>
+                    {showConfirmPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
               </>
             ) : null}
 
-            {error ? <p className="pairing-error">{error}</p> : null}
+            {error ? <p className="pairing-error" role="alert">{error}</p> : null}
 
             <button className="primary-action full-width auth-submit" type="submit" disabled={!canSubmit || busy}>
               {busy ? "One moment…" : mode === "signup" ? "Create my account" : "Sign in"}
